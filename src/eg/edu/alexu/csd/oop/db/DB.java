@@ -1,6 +1,7 @@
 package eg.edu.alexu.csd.oop.db;
 
 import java.io.File;
+import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -19,7 +20,8 @@ import javax.xml.transform.stream.StreamResult;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 
 import java.util.regex.Pattern;
 
@@ -34,7 +36,7 @@ public class DB implements Database{
 	
 	private DB() {}
 	
-	public DB get_instance() {
+	public static DB get_instance() {
 		return instance;
 	}
 	
@@ -42,7 +44,7 @@ public class DB implements Database{
 	/********************************create database********************************/
 	
 	public String createDatabase(String databaseName, boolean dropIfExists)  {	
-		if(dropIfExists) {
+		if(dropIfExists || database_names.contains(databaseName)) {
 			try {
 				executeStructureQuery("drop database "+ databaseName);
 			} catch (SQLException e) {
@@ -67,11 +69,9 @@ public class DB implements Database{
 		if(query.contains("create database")){
 			String DBname = query.substring(16,query.indexOf(";")-1);
 			DocumentBuilderFactory documentfactory = DocumentBuilderFactory.newInstance();
-			
-				DBS.put( DBname,null) ;
-				database_names.push(DBname);
-			
-				
+			DBS.put( DBname,null) ;
+			database_names.push(DBname);
+				return true;
 		}
 		
 		
@@ -87,6 +87,7 @@ public class DB implements Database{
 				}
 				DBS.remove(DBname);
 				database_names.removeElementAt(database_names.indexOf(DBname));
+				return true;
 			}
 			
 		}
@@ -151,20 +152,22 @@ public class DB implements Database{
 					e.printStackTrace();
 				}
 				
-				
-				
-			
+				DBS.get(database_names.peek()).put(table_name, table_FILE);
+				return true;
 			}
 			
 		}
 		
 		
 		else if(query.contains("drop table")) {
-			String table_name = query.substring(11,query.indexOf(";")-1);
-			DocumentBuilderFactory documentfactory = DocumentBuilderFactory.newInstance();
-		
-			
-			
+			if(!database_names.isEmpty()) {
+				String table_name = query.substring(11,query.indexOf(";")-1);
+				if(DBS.get(database_names.peek()).containsKey(table_name)) {
+					DBS.get(database_names.peek()).get(table_name).delete();
+					DBS.get(database_names.peek()).remove(table_name);
+					return true;
+				}
+			}	
 		}
 	
 		
@@ -176,6 +179,30 @@ public class DB implements Database{
 	}
 	/********************************select from table********************************/
 	public Object[][] executeQuery(String query) throws java.sql.SQLException{
+		String table_name = null;
+		String[] cols_names = null;
+		DocumentBuilderFactory documentfactory = DocumentBuilderFactory.newInstance();
+		DocumentBuilder documentbuilder = null;
+		try {
+			documentbuilder = documentfactory.newDocumentBuilder();
+		} catch (ParserConfigurationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		Document document = null;
+		try {
+			 document = documentbuilder.parse(DBS.get(database_names.peek()).get(table_name));
+		} catch (SAXException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		
+		
+ 		
 		
 		
 		
