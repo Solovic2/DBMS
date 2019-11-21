@@ -1,142 +1,233 @@
 package eg.edu.alexu.csd.oop.db;
 
+import java.io.File;
+import java.io.IOException;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Map;
+import java.util.Stack;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerConfigurationException;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
+
 import java.util.regex.Pattern;
 
-public class Check {
-
-	public void mainRegex(String s) {
-		s=s.toLowerCase();
-		String r=s.substring(0, s.indexOf(" "));
-		switch(r) {
-		case "drop": dropscheck(s);
-			break;
-		case "select": selectcheck(s);
-			break;
-		case "delete": deletecheck(s);
-			break;
-		case "insert": insertcheck(s);
-			break;
-		case "update": updatecheck(s);
-			break;
-		case "create": createcheck(s);
-			break;			
+public class DB implements Database{
+	public final static String XMLFilePath = "C:\\Users\\dell\\Desktop";
+	
+	private Map<String, Map<String, File>> DBS;
+	private Stack<String> database_names = null;
+	
+	/********************************Singleton Design Pattern********************************/
+	private static DB instance = new DB();
+	
+	private DB() {}
+	
+	public static DB get_instance() {
+		return instance;
+	}
+	
+	
+	/********************************create database********************************/
+	
+	public String createDatabase(String databaseName, boolean dropIfExists)  {	
+		if(dropIfExists || database_names.contains(databaseName)) {
+			try {
+				executeStructureQuery("drop database "+ databaseName);
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+		}
+		try {
+			executeStructureQuery("create database "+ databaseName);
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 		
-	}
-	private void createcheck(String s) {
-		String num_tables = "(create)(\\s+)(table)(\\s+)(\\w+)(\\s*+)(\\()(\\s*+)(\\s*[\\w]+\\s+(int|varchar)\\s*(?:,\\s*[\\w]+\\s+(int|varchar)\\s*){0,})(\\s*+)(\\))(\\s*+)";
-		String num_database="(create)(\\s+)(database)(\\s+)(\\w+)(\\s*+)";
-		Pattern pattern = Pattern.compile(num_tables);
-        java.util.regex.Matcher matcher = pattern.matcher(s);
-		Pattern pattern_database = Pattern.compile(num_database);
-        java.util.regex.Matcher matcher_database = pattern_database.matcher(s);
-        if (matcher.matches()) {
-            for (int i = 0; i <= matcher.groupCount(); i++)
-                System.out.println("group "+i+" "+matcher.group(i));
-        	System.out.println("Sdasdasdasd");
-        	if(matcher.group(3).equals("database")) {
-        		
-        	}else {
-        		
-        	}
-        }else if(matcher_database.matches()) {
-        	System.out.println("vhhvsv");
-        	
-        }
+		return "DB absolute path";
 		
 	}
-	private void updatecheck(String s) {
-		String updateall="(update)(\\s+)(\\w+)(\\s+)(set)(\\s*[\\w]+\\s*([=><])(\\s*)((?:\\'[\\s\\S]+\\')|(?:\\d+))\\s*(?:,\\s*[\\w]+\\s*([=><])(\\s*)((?:\\'[\\s\\S]+\\')|(?:\\d+))){0,})(\\s*)";
-		String update="(update)(\\s+)(\\w+)(\\s+)(set)(\\s*[\\w]+\\s*([=><])(\\s*)((?:\\'[\\s\\S]+\\')|(?:\\d+))\\s*(?:,\\s*[\\w]+\\s*([=><])(\\s*)((?:\\'[\\s\\S]+\\')|(?:\\d+))){0,})(\\s+)(where)(\\s+)(\\w+)(\\s*+)([=><])(\\s*)((?:\\'[\\s\\S]+\\')|(?:\\d+))(\\s*+)";
-		Pattern pattern_updateall = Pattern.compile(updateall);
-        java.util.regex.Matcher matcher_updateall = pattern_updateall.matcher(s);
-		Pattern pattern_update = Pattern.compile(update);
-        java.util.regex.Matcher matcher_update = pattern_update.matcher(s);
-        if(matcher_updateall.matches()) {
-            for (int i = 0; i <= matcher_updateall.groupCount(); i++)
-                System.out.println("group "+i+" "+matcher_updateall.group(i));
-        	System.out.println("updats");
-        }else if(matcher_update.matches()) {
-        	System.out.println("updatttttt");
-        }
+	
+	/********************************create\drop database\table********************************/
+	public boolean executeStructureQuery(String query) 	throws java.sql.SQLException{
+		if(query.contains("create database")){
+			String DBname = query.substring(16,query.indexOf(";")-1);
+			DocumentBuilderFactory documentfactory = DocumentBuilderFactory.newInstance();
+			DBS.put( DBname,null) ;
+			database_names.push(DBname);
+				return true;
+		}
+		
+		
+		
+		
+		else if(query.contains("drop database")) {
+			String DBname = query.substring(14,query.indexOf(";")-1);
+			if(DBS.containsKey(DBname)) {
+				Map<String,File> tables = DBS.get(DBname); 
+				File[] files = (File[]) tables.values().toArray();
+				for(int i = 0 ; i < tables.size() ; i++) {
+					files[i].delete();
+				}
+				DBS.remove(DBname);
+				database_names.removeElementAt(database_names.indexOf(DBname));
+				return true;
+			}
+			
+		}
+		
+		
+		
+		else if(query.contains("create table")) {
+			if(!database_names.isEmpty()) {
+				String table_name = query.substring(13,query.indexOf("(")-1);
+				String Cols = query.substring(query.indexOf("(")+1, query.indexOf(")"));
+				String[] cols = Cols.split(",");
+				String[] cols_names = new String[cols.length];
+				String[] cols_dtype = new String[cols.length];
+				int count = 0; 
+				for(String i : cols_dtype) {
+					String temp = "(\\s+)(\\w)(\\s+)(\\w+)";
+					Pattern pattern = Pattern.compile(temp);
+					java.util.regex.Matcher matcher = pattern.matcher(i);
+					if (matcher.matches()) {
+						cols_names[count] = matcher.group(2);
+						cols_dtype[count++]  = matcher.group(4);
+						}
+				}
+				DocumentBuilderFactory documentfactory = DocumentBuilderFactory.newInstance();
+				DocumentBuilder documentbuilder = null;
+				try {
+					documentbuilder = documentfactory.newDocumentBuilder();
+				} catch (ParserConfigurationException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				Document document = documentbuilder.newDocument();
+				
+				Element root = document.createElement(table_name);
+				document.appendChild(root);
+				
+				for(int i = 0 ; i < count ; i++) {
+					Element temp = document.createElement(cols_names[i]);
+					document.appendChild(temp);
+					temp.appendChild(document.createAttribute(cols_dtype[i]));	
+				}
+				
+				
+				
+				TransformerFactory transformerfactory = TransformerFactory.newInstance();
+				Transformer transformer = null;
+				try {
+					transformer = transformerfactory.newTransformer();
+				} catch (TransformerConfigurationException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				DOMSource domsource = new DOMSource(document);
+				File table_FILE = new File(XMLFilePath+"./"+ table_name +".xml");
+				StreamResult streamresult = new StreamResult(table_FILE);
+				
+				
+				try {
+					transformer.transform(domsource,streamresult);
+				} catch (TransformerException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				
+				DBS.get(database_names.peek()).put(table_name, table_FILE);
+				return true;
+			}
+			
+		}
+		
+		
+		else if(query.contains("drop table")) {
+			if(!database_names.isEmpty()) {
+				String table_name = query.substring(11,query.indexOf(";")-1);
+				if(DBS.get(database_names.peek()).containsKey(table_name)) {
+					DBS.get(database_names.peek()).get(table_name).delete();
+					DBS.get(database_names.peek()).remove(table_name);
+					return true;
+				}
+			}	
+		}
+	
+		
+		
+		
+		
+		
+		return false;
+	}
+	/********************************select from table********************************/
+	public Object[][] executeQuery(String query) throws java.sql.SQLException{
+		String table_name = null;
+		String[] cols_names = null;
+		DocumentBuilderFactory documentfactory = DocumentBuilderFactory.newInstance();
+		DocumentBuilder documentbuilder = null;
+		try {
+			documentbuilder = documentfactory.newDocumentBuilder();
+		} catch (ParserConfigurationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		Document document = null;
+		try {
+			 document = documentbuilder.parse(DBS.get(database_names.peek()).get(table_name));
+		} catch (SAXException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		
+		
+ 		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		return null;
 		
 	}
-	private void insertcheck(String s) {
-		String insert_int="(insert)(\\s+)(into)(\\s+)(\\w+)(\\s*+)(\\()(\\s*+)([\\w]+\\s*(?:,\\s*[\\w]+\\s*){0,})(\\s*+)(\\))(\\s*)(values)(\\s*)(\\()((?:(?:\\s*\\'\\s*[\\s\\S]+\\s*\\'\\s*)|(?:\\s*[\\d]+\\s*))(?:,(?:(?:\\s*\\'\\s*[\\s\\S]+\\s*\\'\\s*)|(?:\\s*[\\d]+\\s*))){0,})(\\))(\\s*+)";
-		Pattern pattern_insertInt = Pattern.compile(insert_int);
-	        java.util.regex.Matcher matcher_insertInt = pattern_insertInt.matcher(s);
+	/********************************update\insert\delete data in table********************************/
+	public int executeUpdateQuery(String query) throws java.sql.SQLException{
+		
+		
+		
+		
+		
+		
+		
+		return 0;
+	}
 
-	        if(matcher_insertInt.matches()) {
-	            for (int i = 0; i <= matcher_insertInt.groupCount(); i++)
-	                System.out.println("group "+i+" "+matcher_insertInt.group(i));
-	        }
-			
-		
-			
-			
-		
-	}
-	private void deletecheck(String s) {
-		String deleteall="(delete)(\\s+)(from)(\\s+)(\\w+)(\\s*+)";
-		String delete="(delete)(\\s+)(from)(\\s+)(\\w+)(\\s+)(where)(\\s+)(\\w+)(\\s*+)([=><])(\\s*)((?:\\'[\\s\\S]+\\')|(?:\\d+))(\\s*+)";
-		Pattern pattern_deleteall = Pattern.compile(deleteall);
-        java.util.regex.Matcher matcher_deleteall = pattern_deleteall.matcher(s);
-		Pattern pattern_delete = Pattern.compile(delete);
-        java.util.regex.Matcher matcher_delete = pattern_delete.matcher(s);
-        if(matcher_deleteall.matches()) {
-        	System.out.println("delteall");
-        }else if(matcher_delete.matches()) {
-        	System.out.println("delllll");
-        }
-		
-		
-	}
-	private void selectcheck(String s) {
-		String selectall="(select)(\\s+)([*])(\\s+)(from)(\\s+)(\\w+)(\\s*+)";
-		String selectall_where="(select)(\\s+)([*])(\\s+)(from)(\\s+)(\\w+)(\\s+)(where)(\\s+)(\\w+)(\\s*+)([=><])(\\s*)((?:\\'[\\s\\S]+\\')|(?:\\d+))(\\s*+)";
-		String select="(select)(\\s+)(\\s*[\\w]+\\s*(?:,\\s*[\\w]+\\s*){0,})(\\s+)(from)(\\s+)(\\w+)(\\s*+)";
-		String select_where="(select)(\\s+)(\\s*[\\w]+\\s*(?:,\\s*[\\w]+\\s*){0,})(\\s+)(from)(\\s+)(\\w+)(\\s+)(where)(\\s+)(\\w+)(\\s*+)([=><])(\\s*)((?:\\'[\\s\\S]+\\')|(?:\\d+))(\\s*+)";//here??
-		
-		//select all without where condition
-		Pattern pattern_selectall = Pattern.compile(selectall);
-        java.util.regex.Matcher matcher_selectall = pattern_selectall.matcher(s);
-        //select all with where condition
-        Pattern pattern_selectall_where = Pattern.compile(selectall_where);
-        java.util.regex.Matcher matcher_selectall_where = pattern_selectall_where.matcher(s);
-        //select  without where condition
-        Pattern pattern_select = Pattern.compile(select);
-        java.util.regex.Matcher matcher_select = pattern_select.matcher(s);
-        //select  with where condition
-        Pattern pattern_select_where = Pattern.compile(select_where);
-        java.util.regex.Matcher matcher_select_where = pattern_select_where.matcher(s);
-        if(matcher_selectall.matches()) {
-        	System.out.println("selectall");
-        }else if(matcher_selectall_where.matches()) {
-            for (int i = 0; i <= matcher_selectall_where.groupCount(); i++)
-                System.out.println("group "+i+" "+matcher_selectall_where.group(i));
-        	System.out.println("selectall where");
-        }else if(matcher_select.matches()) {
-            for (int i = 0; i <= matcher_select.groupCount(); i++)
-                System.out.println("group "+i+" "+matcher_select.group(i));
-        	System.out.println("select");
-        }else if (matcher_select_where.matches()) {
-            for (int i = 0; i <= matcher_select_where.groupCount(); i++)
-                System.out.println("group "+i+" "+matcher_select_where.group(i));
-        	System.out.println("select where");
-        }
-		
-	}
-	public void dropscheck(String s) {
-        String num =  "(drop)(\\s+)(table|database)(\\s+)(\\w+)(\\s*+)";
-        Pattern pattern = Pattern.compile(num);
-        java.util.regex.Matcher matcher = pattern.matcher(s);
-        if (matcher.matches()) {
-        	if(matcher.group(3).equals("database")) {
-        		
-        	}else {
-        		
-        	}
-        }
-       
-	}
+
 }
