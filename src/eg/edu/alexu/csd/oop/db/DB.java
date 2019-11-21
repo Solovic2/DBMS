@@ -67,13 +67,10 @@ public class DB implements Database{
 		if(query.contains("create database")){
 			String DBname = query.substring(16,query.indexOf(";")-1);
 			DocumentBuilderFactory documentfactory = DocumentBuilderFactory.newInstance();
-			try {
+			
 				DBS.put( DBname,null) ;
 				database_names.push(DBname);
-			} catch (ParserConfigurationException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+			
 				
 		}
 		
@@ -144,7 +141,7 @@ public class DB implements Database{
 				}
 				DOMSource domsource = new DOMSource(document);
 				File table_FILE = new File(XMLFilePath+"./"+ table_name +".xml");
-				StreamResult streamresult = new StreamResult(l);
+				StreamResult streamresult = new StreamResult(table_FILE);
 				
 				
 				try {
