@@ -1,5 +1,6 @@
 package eg.edu.alexu.csd.oop.db;
 
+import java.sql.SQLException;
 import java.util.Scanner;
 import java.util.regex.Pattern;
 
@@ -12,7 +13,12 @@ public class Main {
 		String s=input.nextLine();
 		s=s.toLowerCase();
 		Check c=new Check();
-				c.mainRegex(s);
+				try {
+					c.mainRegex(s);
+				} catch (SQLException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 		
 		
 	}
