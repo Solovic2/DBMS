@@ -8,6 +8,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Stack;
 
+import javax.security.auth.callback.LanguageCallback;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -17,20 +18,21 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
+import javax.xml.validation.SchemaFactory;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 import java.util.regex.Pattern;
 
 public class DB implements Database{
-	public final static String XMLFilePath = "C:\\Users\\momen\\Desktop";
+	public final static String XMLFilePath = "C:\\Users\\dell\\Desktop";
 	
-	private Map<String, Map<String, File>> DBS;
-	private Stack<String> database_names = null;
-	
+	private static Map<String, Map<String, File>> DBS;
+	private static Stack<String> database_names = null;
 	/********************************Singleton Design Pattern********************************/
 	private static DB instance = new DB();
 	
@@ -39,8 +41,29 @@ public class DB implements Database{
 	public static DB get_instance() {
 		return instance;
 	}
+
+
+
+/********************************check the first word***************************/
 	
-	
+	public void mainRegex(String s) throws SQLException {
+		s=s.toLowerCase();
+		String r=s.substring(0, s.indexOf(" "));
+		switch(r) {
+		case "drop": executeStructureQuery(s);
+			break;
+		case "select": executeQuery(s);
+			break;
+		case "delete": executeUpdateQuery(s);
+			break;
+		case "insert": executeUpdateQuery(s);
+			break;
+		case "update": executeUpdateQuery(s);
+			break;
+		case "create": executeStructureQuery(s);
+			break;			
+		}	
+	}
 	/********************************create database********************************/
 	
 	public String createDatabase(String databaseName, boolean dropIfExists)  {	
@@ -65,12 +88,12 @@ public class DB implements Database{
 	}
 	
 	/********************************create\drop database\table********************************/
-	public boolean executeStructureQuery(String query) 	throws java.sql.SQLException{
+	public  boolean executeStructureQuery(String query) 	throws java.sql.SQLException{
 		if(query.contains("create database")){
-			String DBname = query.substring(16,query.indexOf(";")-1);
+			String DBname = query.substring(16,17);System.out.println(DBname);
 			DocumentBuilderFactory documentfactory = DocumentBuilderFactory.newInstance();
-			DBS.put( DBname,null) ;
-			database_names.push(DBname);
+			//DBS.put( DBname,new Map<String,File>) ;
+			//database_names.push(DBname);
 				return true;
 		}
 		
@@ -111,8 +134,11 @@ public class DB implements Database{
 						cols_dtype[count++]  = matcher.group(4);
 						}
 				}
+				
+				
 				DocumentBuilderFactory documentfactory = DocumentBuilderFactory.newInstance();
 				DocumentBuilder documentbuilder = null;
+				/**************************************creating xml file************************************/
 				try {
 					documentbuilder = documentfactory.newDocumentBuilder();
 				} catch (ParserConfigurationException e) {
@@ -124,12 +150,13 @@ public class DB implements Database{
 				Element root = document.createElement(table_name);
 				document.appendChild(root);
 				
-				for(int i = 0 ; i < count ; i++) {
-					Element temp = document.createElement(cols_names[i]);
-					document.appendChild(temp);
-					temp.appendChild(document.createAttribute(cols_dtype[i]));	
-				}
+				Element table = document.createElement("table_name");
+				root.appendChild(table);
 				
+				for(int i = 0 ; i < cols_names.length ; i++) {
+					Element temp = document.createElement(cols_names[i]);
+					table.appendChild(temp);
+				}
 				
 				
 				TransformerFactory transformerfactory = TransformerFactory.newInstance();
@@ -151,6 +178,42 @@ public class DB implements Database{
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
+				/*************************creating schema file******************************************/
+				Document schema = documentbuilder.newDocument();
+				root = schema.createElement("xs:schema");
+				root.setAttribute("xmlns", "http://www.w3.org/2001/xmlschema.xsd");
+				schema.appendChild(root);
+				
+				Element element = schema.createElement("xs:element");
+				element.setAttribute("name", "id");
+				root.appendChild(element);
+				
+				Element complextype = schema.createElement("xs:ComplexType");
+				element.appendChild(complextype);
+				
+				Element sequence = schema.createElement("xs:sequence");
+				complextype.appendChild(sequence);
+				
+				for(int i = 0 ; i < cols_names.length ; i++) {
+					Element temp = schema.createElement("xs:element");
+					temp.setAttribute("name", cols_names[i]);
+					temp.setAttribute("name", "xs:"+cols_dtype[i]);
+					sequence.appendChild(temp);
+				}
+				domsource = new DOMSource(schema);
+				File SchemaFile = new File(XMLFilePath+"./"+ table_name +".xsd");
+				streamresult = new StreamResult(SchemaFile);
+				
+				
+				try {
+					transformer.transform(domsource,streamresult);
+				} catch (TransformerException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				
+				
+				
 				
 				DBS.get(database_names.peek()).put(table_name, table_FILE);
 				return true;
@@ -181,6 +244,7 @@ public class DB implements Database{
 	public Object[][] executeQuery(String query) throws java.sql.SQLException{
 		String table_name = null;
 		String[] cols_names = null;
+		String[][] Selected ;
 		DocumentBuilderFactory documentfactory = DocumentBuilderFactory.newInstance();
 		DocumentBuilder documentbuilder = null;
 		try {
@@ -200,25 +264,146 @@ public class DB implements Database{
 			e.printStackTrace();
 		}
 		
+		NodeList rows = document.getElementsByTagName("id");
 		
+		if(table_name.equals("*")){
+			NodeList cols_nodes = document.getElementsByTagName("id").item(0).getChildNodes();
+			for(int i = 0 ; i < cols_nodes.getLength() ; i++) {
+				cols_names[i] = cols_nodes.item(i).getNodeName();
+			}
+			Selected = new String[rows.getLength()][cols_names.length];
+			
+			for(int i = 0 ; i < rows.getLength()+1 ; i++) {
+				for(int j = 0 ; j < cols_names.length ; j++) {
+					if(i == 0) {
+						Selected[0][j] = cols_names[j];
+					}
+					else {
+							Selected[i][j] = rows.item(i-1).getChildNodes().item(j).getNodeValue();	
+					}
+				}
+			}		
+		}
 		
- 		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
+		else {
+			Selected = new String[rows.getLength()][cols_names.length];
+			
+			
+			
+			
+		}
 		
 		return null;
 		
 	}
 	/********************************update\insert\delete data in table********************************/
 	public int executeUpdateQuery(String query) throws java.sql.SQLException{
+		if(!database_names.isEmpty()) {
+			String order = null;
+			String table_name = null;
+			
+			DocumentBuilderFactory documentfactory = DocumentBuilderFactory.newInstance();
+			DocumentBuilder documentbuilder = null;;
+			try {
+				documentbuilder = documentfactory.newDocumentBuilder();
+			} catch (ParserConfigurationException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			Document document = null;
+			try {
+				document = documentbuilder.parse(DBS.get(database_names.peek()).get(table_name));
+			} catch (SAXException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+
+			
+			if (order.equals("insert")) {
+				String[] cols_names = null;
+				String[] cols_vals = null;
+								
+				Element root = document.getDocumentElement();
+				
+				Element NEW = document.createElement("id");
+				root.appendChild(NEW);
+				
+				for(int i = 0 ; i < cols_names.length ; i++) {
+					Element temp = document.createElement(cols_names[i]);
+					NEW.appendChild(temp);
+					temp.appendChild(document.createTextNode(cols_vals[i]));	
+				}
+				
+				TransformerFactory transformerfactory = TransformerFactory.newInstance();
+				Transformer transformer = null;
+				try {
+					transformer = transformerfactory.newTransformer();
+				} catch (TransformerConfigurationException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				DOMSource domsource = new DOMSource(document);
+				StreamResult streamresult = new StreamResult(DBS.get(database_names.peek()).get(table_name));
+				
+				
+				try {
+					transformer.transform(domsource,streamresult);
+				} catch (TransformerException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				
+				
+			}
+			
+			
+			else if(order.equals("delete")) {
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+			}
+			
+			
+			else if(order.equals("update")) {
+				
+				
+				
+				
+		
+				
+				
+				
+				
+				
+				
+			}
+			
+			
+		
+			
+			
+		}
+		
+		
 		
 		
 		
