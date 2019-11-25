@@ -1,0 +1,2 @@
+Name: finaltest
+PATH: D:\DBMS\databases\finaltest

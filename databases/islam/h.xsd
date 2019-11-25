@@ -1,0 +1,1 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><xs:schema xmlns:xs="http://www.w3.org/2001/xmlschema.xsd"><xs:element name="id"><xs:ComplexType><xs:sequence><xs:element name="xs:varchar"/><xs:element name="xs:int"/></xs:sequence></xs:ComplexType></xs:element></xs:schema>
