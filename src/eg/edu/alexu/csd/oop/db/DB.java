@@ -16,7 +16,6 @@ import java.util.Map;
 import java.util.Scanner;
 import java.util.Stack;
 
-import javax.security.auth.callback.LanguageCallback;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -26,15 +25,12 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
-import javax.xml.validation.SchemaFactory;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
-<<<<<<< HEAD
 	public class DB implements Database{
 	private final static String XMLFilePath = "D:\\DBMS\\databases";
 	private  File file =  new File("D:\\DBMS\\DB_PATHES.txt");	
@@ -84,15 +80,6 @@ import org.xml.sax.SAXException;
         System.out.println(values);
 		*/
 	}
-=======
-import java.util.regex.Pattern;
-
-public class DB implements Database{
-	public final static String XMLFilePath = "C:\\Users\\dell\\Desktop";
-	
-	private static Map<String, Map<String, File>> DBS;
-	private static Stack<String> database_names = null;
->>>>>>> 9e01e51e352ee86a38d7e18d0b46dd27d76e4059
 	/********************************Singleton Design Pattern********************************/
 	private static DB instance = new DB();
 	
@@ -105,7 +92,6 @@ public class DB implements Database{
 
 
 /********************************check the first word***************************/
-<<<<<<< HEAD
 	
 	public void mainRegex(String s) throws SQLException {
 		s=s.toLowerCase();
@@ -148,27 +134,6 @@ public class DB implements Database{
 		return false;
 	}
 	
-=======
-	
-	public void mainRegex(String s) throws SQLException {
-		s=s.toLowerCase();
-		String r=s.substring(0, s.indexOf(" "));
-		switch(r) {
-		case "drop": executeStructureQuery(s);
-			break;
-		case "select": executeQuery(s);
-			break;
-		case "delete": executeUpdateQuery(s);
-			break;
-		case "insert": executeUpdateQuery(s);
-			break;
-		case "update": executeUpdateQuery(s);
-			break;
-		case "create": executeStructureQuery(s);
-			break;			
-		}	
-	}
->>>>>>> 9e01e51e352ee86a38d7e18d0b46dd27d76e4059
 	/********************************create database********************************/
 	
 	public String createDatabase(String databaseName, boolean dropIfExists)  {	
@@ -196,7 +161,6 @@ public class DB implements Database{
 		
 	}
 	/********************************create\drop database\table********************************/
-<<<<<<< HEAD
 	@SuppressWarnings("static-access")
 	public  boolean executeStructureQuery(String query) 	throws java.sql.SQLException{
 		
@@ -260,15 +224,6 @@ public class DB implements Database{
 				System.err.println("Same Database Are Createad");
 				return false ;
 			}
-=======
-	public  boolean executeStructureQuery(String query) 	throws java.sql.SQLException{
-		if(query.contains("create database")){
-			String DBname = query.substring(16,17);System.out.println(DBname);
-			DocumentBuilderFactory documentfactory = DocumentBuilderFactory.newInstance();
-			//DBS.put( DBname,new Map<String,File>) ;
-			//database_names.push(DBname);
-				return true;
->>>>>>> 9e01e51e352ee86a38d7e18d0b46dd27d76e4059
 		}
 		
 		
@@ -358,11 +313,8 @@ public class DB implements Database{
 					cols_dtype[i]=cr[j+1];
 					j+=2;
 				}
-				
-				
 				DocumentBuilderFactory documentfactory = DocumentBuilderFactory.newInstance();
 				DocumentBuilder documentbuilder = null;
-<<<<<<< HEAD
 				String before_path = new String();
 				String read =new String();
 				String new_path=new String();
@@ -402,9 +354,6 @@ public class DB implements Database{
 						e2.printStackTrace();
 					}
 									/**************************************creating xml file************************************/
-=======
-				/**************************************creating xml file************************************/
->>>>>>> 9e01e51e352ee86a38d7e18d0b46dd27d76e4059
 				try {
 					documentbuilder = documentfactory.newDocumentBuilder();
 				} catch (ParserConfigurationException e) {
@@ -416,22 +365,14 @@ public class DB implements Database{
 				Element root = document.createElement(table_name);
 				document.appendChild(root);
 				
-<<<<<<< HEAD
 				Element table = document.createElement("ZeroRow");
-=======
-				Element table = document.createElement("table_name");
->>>>>>> 9e01e51e352ee86a38d7e18d0b46dd27d76e4059
 				root.appendChild(table);
 				
 				for(int i = 0 ; i < cols_names.length ; i++) {
 					Element temp = document.createElement(cols_names[i]);
-<<<<<<< HEAD
 					temp.setAttribute("type", cols_dtype[i]);
 					table.appendChild(temp);
 					
-=======
-					table.appendChild(temp);
->>>>>>> 9e01e51e352ee86a38d7e18d0b46dd27d76e4059
 				}
 				
 				
@@ -457,50 +398,17 @@ public class DB implements Database{
 				/*************************creating schema file******************************************/
 				Document schema = documentbuilder.newDocument();
 				root = schema.createElement("xs:schema");
-<<<<<<< HEAD
 				root.setAttribute("xmlns:xs", "http://www.w3.org/2001/xmlschema.xsd");
 				schema.appendChild(root);
 				
 				
 				
-=======
-				root.setAttribute("xmlns", "http://www.w3.org/2001/xmlschema.xsd");
-				schema.appendChild(root);
-				
->>>>>>> 9e01e51e352ee86a38d7e18d0b46dd27d76e4059
 				Element element = schema.createElement("xs:element");
 				element.setAttribute("name", "id");
 				root.appendChild(element);
 				
 				Element complextype = schema.createElement("xs:ComplexType");
 				element.appendChild(complextype);
-<<<<<<< HEAD
-=======
-				
-				Element sequence = schema.createElement("xs:sequence");
-				complextype.appendChild(sequence);
-				
-				for(int i = 0 ; i < cols_names.length ; i++) {
-					Element temp = schema.createElement("xs:element");
-					temp.setAttribute("name", cols_names[i]);
-					temp.setAttribute("name", "xs:"+cols_dtype[i]);
-					sequence.appendChild(temp);
-				}
-				domsource = new DOMSource(schema);
-				File SchemaFile = new File(XMLFilePath+"./"+ table_name +".xsd");
-				streamresult = new StreamResult(SchemaFile);
-				
-				
-				try {
-					transformer.transform(domsource,streamresult);
-				} catch (TransformerException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-				
-				
-				
->>>>>>> 9e01e51e352ee86a38d7e18d0b46dd27d76e4059
 				
 				Element sequence = schema.createElement("xs:sequence");
 				complextype.appendChild(sequence);
@@ -561,7 +469,6 @@ public class DB implements Database{
 	public Object[][] executeQuery(String query) throws java.sql.SQLException{
 		String table_name = null;
 		String[] cols_names = null;
-<<<<<<< HEAD
 		String[][] Selected;
 		String[] condition = null;
 		ArrayList<Integer> Selected_rows = new ArrayList<Integer>(0);;
@@ -574,9 +481,6 @@ public class DB implements Database{
 			condition[1]=cr[2];
 			condition[2]=cr[3];
 		}
-=======
-		String[][] Selected ;
->>>>>>> 9e01e51e352ee86a38d7e18d0b46dd27d76e4059
 		DocumentBuilderFactory documentfactory = DocumentBuilderFactory.newInstance();
 		DocumentBuilder documentbuilder = null;
 		try {
@@ -598,26 +502,7 @@ public class DB implements Database{
 		
 		NodeList rows = document.getElementsByTagName("id");
 		
-		if(table_name.equals("*")){
-			NodeList cols_nodes = document.getElementsByTagName("id").item(0).getChildNodes();
-			for(int i = 0 ; i < cols_nodes.getLength() ; i++) {
-				cols_names[i] = cols_nodes.item(i).getNodeName();
-			}
-			Selected = new String[rows.getLength()][cols_names.length];
-			
-			for(int i = 0 ; i < rows.getLength()+1 ; i++) {
-				for(int j = 0 ; j < cols_names.length ; j++) {
-					if(i == 0) {
-						Selected[0][j] = cols_names[j];
-					}
-					else {
-							Selected[i][j] = rows.item(i-1).getChildNodes().item(j).getNodeValue();	
-					}
-				}
-			}		
-		}
 		
-<<<<<<< HEAD
 		for(int i = 0 ; i < rows.getLength() ; i++) {
 			if(condition == null || condition_calculator(document.getElementsByTagName(condition[0]).item(i).getTextContent(), condition[2], condition[1].charAt(0))) {
 				Selected_rows.add(i);		
@@ -640,13 +525,6 @@ public class DB implements Database{
 					Selected[i][j] = document.getElementsByTagName(cols_names[j]).item(i).getTextContent(); 
 				}
 			}
-=======
-		else {
-			Selected = new String[rows.getLength()][cols_names.length];
-			
-			
-			
->>>>>>> 9e01e51e352ee86a38d7e18d0b46dd27d76e4059
 			
 		}
 		
@@ -655,7 +533,6 @@ public class DB implements Database{
 	}
 	/********************************update\insert\delete data in table********************************/
 	public int executeUpdateQuery(String query) throws java.sql.SQLException{
-<<<<<<< HEAD
 	if(!database_names.isEmpty()) {
 		String order = null;
 		String table_name = null;
@@ -676,114 +553,6 @@ public class DB implements Database{
 			if(cr==null)return 0;
 			table_name=cr[0];
 		}
-=======
-		if(!database_names.isEmpty()) {
-			String order = null;
-			String table_name = null;
-			
-			DocumentBuilderFactory documentfactory = DocumentBuilderFactory.newInstance();
-			DocumentBuilder documentbuilder = null;;
-			try {
-				documentbuilder = documentfactory.newDocumentBuilder();
-			} catch (ParserConfigurationException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			Document document = null;
-			try {
-				document = documentbuilder.parse(DBS.get(database_names.peek()).get(table_name));
-			} catch (SAXException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-
-			
-			if (order.equals("insert")) {
-				String[] cols_names = null;
-				String[] cols_vals = null;
-								
-				Element root = document.getDocumentElement();
-				
-				Element NEW = document.createElement("id");
-				root.appendChild(NEW);
-				
-				for(int i = 0 ; i < cols_names.length ; i++) {
-					Element temp = document.createElement(cols_names[i]);
-					NEW.appendChild(temp);
-					temp.appendChild(document.createTextNode(cols_vals[i]));	
-				}
-				
-				TransformerFactory transformerfactory = TransformerFactory.newInstance();
-				Transformer transformer = null;
-				try {
-					transformer = transformerfactory.newTransformer();
-				} catch (TransformerConfigurationException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-				DOMSource domsource = new DOMSource(document);
-				StreamResult streamresult = new StreamResult(DBS.get(database_names.peek()).get(table_name));
-				
-				
-				try {
-					transformer.transform(domsource,streamresult);
-				} catch (TransformerException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-				
-				
-			}
-			
-			
-			else if(order.equals("delete")) {
-				
-				
-				
-				
-				
-				
-				
-				
-				
-				
-				
-				
-				
-				
-				
-				
-				
-				
-				
-			}
-			
-			
-			else if(order.equals("update")) {
-				
-				
-				
-				
-		
-				
-				
-				
-				
-				
-				
-			}
-			
-			
-		
-			
-			
-		}
-		
-		
->>>>>>> 9e01e51e352ee86a38d7e18d0b46dd27d76e4059
 		
 		DocumentBuilderFactory documentfactory = DocumentBuilderFactory.newInstance();
 		DocumentBuilder documentbuilder = null;
@@ -1011,9 +780,4 @@ public class DB implements Database{
 		}
 	return 0;
 	}
-<<<<<<< HEAD
-=======
-
-
->>>>>>> 9e01e51e352ee86a38d7e18d0b46dd27d76e4059
 }
