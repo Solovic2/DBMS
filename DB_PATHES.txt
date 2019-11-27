@@ -4,3 +4,5 @@ Name: lol
 PATH: D:\DBMS\databases\lol
 Name: TestDB
 PATH: D:\DBMS\databases\sample\TestDB
+Name: SaMpLe
+PATH: D:\DBMS\databases\sample\SaMpLe
