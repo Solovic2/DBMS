@@ -36,10 +36,30 @@ import org.xml.sax.SAXException;
 	private  File file =  new File("D:\\DBMS\\DB_PATHES.txt");	
 	private Check ch = Check.get_instance();
 	@SuppressWarnings("unused")
+	   
 	private XMLValidation XML_validator = XMLValidation.get_instance(); 
 	private static Map<String, Map<String, File>> DBS = new HashMap<String, Map<String,File>>();
 	private static Map<String, String> table_DB = new HashMap<String, String>();
 	private static Stack<String> database_names = new Stack<String>();
+	/************************move to file**********************************/
+	public File movetofile(File file1 , File file2) throws IOException {
+		
+	      BufferedReader brx = new BufferedReader(new FileReader(file1));
+	      PrintWriter pwx = new PrintWriter(new FileWriter(file2));
+	      String line = null;
+	      while ((line = brx.readLine()) != null) {
+	        
+	          pwx.println(line);
+	          pwx.flush();
+	        
+	      }
+	      pwx.close();
+	      brx.close();
+	   
+	      return file2;
+	     
+		
+	}
 	/******************************reload **********************************/
 	public void reload() throws FileNotFoundException, IOException {
 		try (BufferedReader br = new BufferedReader(new FileReader(file))) {
@@ -63,8 +83,11 @@ import org.xml.sax.SAXException;
 		    	//  System.out.println("files: ");
 		    	  for (File file : listOfFiles) {
 		    	      if (file.isFile()) {
+		    	    	  if(file.getName().contains("xml")) {
+		    	    		  table_DB.put(file.getName().substring(0, file.getName().length()-4), foldername);
+		    	    	  }
 		    	    	 temp.put(file.getName(), file);
-		    	    	 table_DB.put(file.getName(), foldername);
+		    	    	
 		    	  //        System.out.println(file.getName());
 		    	      }
 		    	  }
@@ -73,12 +96,14 @@ import org.xml.sax.SAXException;
 		    }
 		}
 		// just for test 
-	/*	System.out.println("map");
+	System.out.println("map1");
 		DBS.forEach((key, value) -> System.out.println(key + " : " + value));
+		System.out.println("map2");
+		table_DB.forEach((key, value) -> System.out.println(key + " : " + value));	
 		System.out.println("stack");
 		String values = Arrays.toString(database_names.toArray());
         System.out.println(values);
-		*/
+		
 	}
 	/********************************Singleton Design Pattern********************************/
 	private static DB instance = new DB();
@@ -137,6 +162,9 @@ import org.xml.sax.SAXException;
 	/********************************create database********************************/
 	
 	public String createDatabase(String databaseName, boolean dropIfExists)  {	
+		if(databaseName.contains(System.getProperty("file.separator")) && databaseName.charAt(1) != ':') {
+			databaseName = XMLFilePath+"\\"+databaseName;
+		}
 		if(dropIfExists && database_names.contains(databaseName)) {
 			try {
 				executeStructureQuery("drop database "+ databaseName.substring(databaseName.lastIndexOf("\\")+1));
@@ -168,7 +196,7 @@ import org.xml.sax.SAXException;
 		/**********************************create database***************************************/
 		if(query.contains("create database")){
 			String[] str =ch.createcheck(query);
-			if(str==null)return false;
+			if(str==null) return false;
 			String DBname= str[0];
 			if(!database_names.contains(DBname)) {
 			@SuppressWarnings("unused")
@@ -313,6 +341,15 @@ import org.xml.sax.SAXException;
 					cols_dtype[i]=cr[j+1];
 					j+=2;
 				}
+				for(int i = 0 ; i < cols_dtype.length ; i++) {
+					if(cols_dtype[i].equals("varchar")) {
+						cols_dtype[i] = "string";
+					}
+					else {
+						cols_dtype[i] = "integer";
+					}
+					
+				}
 				DocumentBuilderFactory documentfactory = DocumentBuilderFactory.newInstance();
 				DocumentBuilder documentbuilder = null;
 				String before_path = new String();
@@ -365,7 +402,7 @@ import org.xml.sax.SAXException;
 				Element root = document.createElement(table_name);
 				document.appendChild(root);
 				
-				Element table = document.createElement("ZeroRow");
+				/*Element table = document.createElement("ZeroRow");
 				root.appendChild(table);
 				
 				for(int i = 0 ; i < cols_names.length ; i++) {
@@ -373,7 +410,7 @@ import org.xml.sax.SAXException;
 					temp.setAttribute("type", cols_dtype[i]);
 					table.appendChild(temp);
 					
-				}
+				}*/
 				
 				
 				TransformerFactory transformerfactory = TransformerFactory.newInstance();
@@ -398,26 +435,46 @@ import org.xml.sax.SAXException;
 				/*************************creating schema file******************************************/
 				Document schema = documentbuilder.newDocument();
 				root = schema.createElement("xs:schema");
-				root.setAttribute("xmlns:xs", "http://www.w3.org/2001/xmlschema.xsd");
+				root.setAttribute("xmlns:xs", "http://www.w3.org/2001/XMLSchema");
 				schema.appendChild(root);
 				
 				
 				
 				Element element = schema.createElement("xs:element");
-				element.setAttribute("name", "id");
+				element.setAttribute("name", table_name);
 				root.appendChild(element);
 				
-				Element complextype = schema.createElement("xs:ComplexType");
-				element.appendChild(complextype);
+				Element complextype1 = schema.createElement("xs:complexType");
+				element.appendChild(complextype1);
 				
-				Element sequence = schema.createElement("xs:sequence");
-				complextype.appendChild(sequence);
+				Element sequence1 = schema.createElement("xs:sequence");
+				complextype1.appendChild(sequence1);
+				
+				Element row = schema.createElement("xs:element");
+				row.setAttribute("name", "id");
+				row.setAttribute("type", "row_type");
+				row.setAttribute("minOccurs", "0");
+				row.setAttribute("maxOccurs", "unbounded");
+				sequence1.appendChild(row);
+				
+				
+				
+				
+				Element complextype2 = schema.createElement("xs:complexType");
+				complextype2.setAttribute("name", "row_type");
+				root.appendChild(complextype2);
+				
+				
+				Element sequence2 = schema.createElement("xs:sequence");
+				complextype2.appendChild(sequence2);
 				
 				for(int i = 0 ; i < cols_names.length ; i++) {
 					Element temp = schema.createElement("xs:element");
 					temp.setAttribute("name", cols_names[i]);
-					temp.setAttribute("name", "xs:"+cols_dtype[i]);
-					sequence.appendChild(temp);
+					temp.setAttribute("type", "xs:"+cols_dtype[i]);
+					temp.setAttribute("minOccurs", "0");
+					temp.setAttribute("maxOccurs", "unbounded");
+					sequence2.appendChild(temp);
 				}
 				domsource = new DOMSource(schema);
 				File SchemaFile = new File(new_path+"\\"+ table_name +".xsd");
@@ -447,8 +504,8 @@ import org.xml.sax.SAXException;
 				String table_name = ch.dropscheck(query);
 				if(table_name == null) return false;
 				if(DBS.get(database_names.peek()).containsKey(table_name)) {
-					DBS.get(table_DB.get(table_name)).get(table_name).delete();
-					File xsd = new File(DBS.get(table_DB.get(table_name)).get(table_name).getAbsolutePath().replace("xml", "xsd"));
+					DBS.get(table_DB.get(table_name)).get(table_name+".xml").delete();
+					File xsd = new File(DBS.get(table_DB.get(table_name)).get(table_name+".xml").getAbsolutePath().replace("xml", "xsd"));
 					xsd.delete();
 					DBS.get(table_DB.get(table_name)).remove(table_name);
 					table_DB.remove(table_name);
@@ -477,10 +534,16 @@ import org.xml.sax.SAXException;
 		table_name=cr[0];
 		if(query.contains("where")) {
 			condition = new String[3];
-			condition[0]=cr[1];
-			condition[1]=cr[2];
-			condition[2]=cr[3];
+			condition[0]=cr[cr.length-3];
+			condition[1]=cr[cr.length-2];
+			condition[2]=cr[cr.length-1];
+			cols_names = new String[(cr.length-4)];
+		}else {
+			cols_names = new String[(cr.length-1)];
 		}
+		
+		
+		
 		DocumentBuilderFactory documentfactory = DocumentBuilderFactory.newInstance();
 		DocumentBuilder documentbuilder = null;
 		try {
@@ -491,7 +554,7 @@ import org.xml.sax.SAXException;
 		}
 		Document document = null;
 		try {
-			 document = documentbuilder.parse(DBS.get(database_names.peek()).get(table_name));
+			 document = documentbuilder.parse(DBS.get(table_DB.get(table_name)).get(table_name+".xml"));
 		} catch (SAXException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -510,23 +573,39 @@ import org.xml.sax.SAXException;
 		}
 		
 		if(query.contains("*")){
-			Selected = new String[Selected_rows.size()][rows.item(0).getChildNodes().getLength()]; 
+			Selected = new String[Selected_rows.size()][rows.item(0).getChildNodes().getLength()];
+			int c = 0;
 			for(int i : Selected_rows) {
 				for(int j = 0 ; j < rows.item(0).getChildNodes().getLength() ; j++){
-					Selected[i][j] = rows.item(i).getChildNodes().item(j).getTextContent();
+					Selected[c++][j] = rows.item(i).getChildNodes().item(j).getTextContent();
 				}
 			}
 		}
 		
 		else {
+			int v=1;
+			for(int i=0;i<cols_names.length;i++) {
+				cols_names[i]=cr[v];
+				v++;
+				
+			}
+			
 			Selected = new String[Selected_rows.size()][cols_names.length]; 
+			int c = 0;
 			for(int i : Selected_rows) {
 				for(int j = 0 ; j < cols_names.length ; j++){
-					Selected[i][j] = document.getElementsByTagName(cols_names[j]).item(i).getTextContent(); 
-				}
+					Selected[c][j] = document.getElementsByTagName(cols_names[c]).item(j).getTextContent(); 
+				}c++;
 			}
 			
 		}
+		
+		for(int i = 0 ; i < Selected.length ; i++) {
+			for(int j = 0 ; j < Selected[0].length ; j++) {
+				System.out.print(Selected[i][j]+" ");
+					}System.out.print("\n");
+		}
+		
 		
 		return Selected;
 		
@@ -564,7 +643,7 @@ import org.xml.sax.SAXException;
 		}
 		Document document = null;
 		try {
-			document = documentbuilder.parse(DBS.get(database_names.peek()).get(table_name));
+			document = documentbuilder.parse(DBS.get(table_DB.get(table_name)).get(table_name+".xml"));
 		} catch (SAXException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -577,38 +656,38 @@ import org.xml.sax.SAXException;
 		if (order.equals("insert")) {
 			String[] cols_names = new String[(cr.length-1)/2];
 			String[] cols_vals = new String[(cr.length-1)/2];
-			int j=1;
+			int k=1;
 			for(int i=0;i<cols_names.length;i++) {
-				cols_names[i]=cr[j];
-				cols_vals[i]=cr[j+1];
-				j+=2;
+				cols_names[i]=cr[k];
+				cols_vals[i]=cr[k+1];
+				k+=2;
 			}
 							
 			Element root = document.getDocumentElement();
 			
 			Element NEW = document.createElement("id");
 			root.appendChild(NEW);
+			Document schema =null;
+			try {
+				schema = documentbuilder.parse(new File(DBS.get(table_DB.get(table_name)).get(table_name+".xml").getAbsolutePath().replace("xml", "xsd")));
+			} catch (SAXException | IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
 			
-			for(int i = 0 ; i < cols_names.length ; i++) {
+			for(int i = 0; i < cols_names.length ; i++) {
 				Element temp = document.createElement(cols_names[i]);
 				NEW.appendChild(temp);
 				temp.setTextContent(cols_vals[i]);
+				
 			}
 			
-			//System.out.println(XML_validator.validate_Xml_Xsd(DBS.get(table_DB.get(table_name)).get(table_name).getAbsolutePath(),DBS.get(table_DB.get(table_name)).get(table_name).getAbsolutePath().replace("xml", "xsd")));
-	//		if(XML_validator.validate_Xml_Xsd(DBS.get(table_DB.get(table_name)).get(table_name).getAbsolutePath(),DBS.get(table_DB.get(table_name)).get(table_name).getAbsolutePath().replace("xml", "xsd"))) {
-				
-					
-				
-		//	}
-			//else {
 			
-				
-				
-				
-				
-				
-			//}
+			/*for(int i = 0 ; i < cols_names.length ; i++) {
+				Element temp = document.createElement(cols_names[i]);
+				NEW.appendChild(temp);
+				temp.setTextContent(cols_vals[i]);
+			}*/	
 			
 			TransformerFactory transformerfactory = TransformerFactory.newInstance();
 			Transformer transformer = null;
@@ -619,19 +698,39 @@ import org.xml.sax.SAXException;
 				e.printStackTrace();
 			}
 			DOMSource domsource = new DOMSource(document);
-			StreamResult streamresult = new StreamResult(DBS.get(table_DB.get(table_name)).get(table_name));
+			File temp = new File(XMLFilePath+"\\"+ "temp" +".xml");
+			StreamResult streamresult = new StreamResult(temp);
 			
 			
 			try {
 				transformer.transform(domsource,streamresult);
-				System.out.println("You Inserted into>> "+table_name);
 			} catch (TransformerException e) {
+				System.err.println("Error");
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
+		
 			
-		
-		
+			
+			
+			if(XML_validator.validate_Xml_Xsd(temp.getAbsolutePath(),DBS.get(table_DB.get(table_name)).get(table_name+".xml").getAbsolutePath().replace("xml", "xsd"))) {
+				try {
+					movetofile(temp, DBS.get(table_DB.get(table_name)).get(table_name+".xml"));
+					System.out.println("You Inserted Into >> "+table_name);
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+			else {
+			
+				
+				
+				System.err.println("Error invalid datatype!");
+				
+				
+			}
+			temp.delete();
 			
 			
 			
@@ -649,26 +748,31 @@ import org.xml.sax.SAXException;
 				condition[0]=cr[1];
 				condition[1]=cr[2];
 				condition[2]=cr[3];
-				//System.out.println("www"+conditions[0]+"  "+conditions[1]+"  "+conditions[2]);
-				String col_name = condition[0];
-				NodeList colvals = document.getElementsByTagName(col_name);
+				NodeList colvals = document.getElementsByTagName(condition[0]);
+				//System.out.println(colvals.item(1));
+				//System.out.println(document.getFirstChild().getChildNodes().item(1).getChildNodes().item(0));
+				//System.out.println(document.getFirstChild().getChildNodes().item(1).getChildNodes().item(1));
+				boolean deleted = false;
 				for(int i = 0 ; i < colvals.getLength() ; i++) {
 					if(condition == null ||condition_calculator(document.getElementsByTagName(condition[0]).item(i).getTextContent(), condition[2], condition[1].charAt(0))) {
-						document.removeChild(document.getFirstChild().getChildNodes().item(i));						
-					
-				}
+						deleted = true;
+						document.getFirstChild().removeChild(document.getFirstChild().getChildNodes().item(i));						
+					}
 				}
 				TransformerFactory transformerfactory = TransformerFactory.newInstance();
 				Transformer transformer = null;
 				try {
-					transformer = transformerfactory.newTransformer();
+					if(deleted) {
+						transformer = transformerfactory.newTransformer();
+						System.out.println("Delete done");
+					}
 				} catch (TransformerConfigurationException e) {
+					System.err.println("Error!");
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 				DOMSource domsource = new DOMSource(document);
-				StreamResult streamresult = new StreamResult(DBS.get(table_DB.get(table_name)).get(table_name));
-				
+				StreamResult streamresult = new StreamResult(DBS.get(table_DB.get(table_name)).get(table_name+".xml"));
 				
 				try {
 					transformer.transform(domsource,streamresult);
@@ -704,21 +808,23 @@ import org.xml.sax.SAXException;
 		else if(order.equals("update")) {
 			if(!query.contains("where")) {
 				String[] cols_names = new String[(cr.length-1)/3];
-				String[] sign = new String[(cr.length-1)/3];
+				//String[] sign = new String[(cr.length-1)/3];
 				String[] cols_vals = new String[(cr.length-1)/3];
 				
 				for(int i = 0 , j = 1 ; i < cols_names.length ; i++,j+=3) {
 					cols_names[i]=cr[j];
-					sign[i]=cr[j+1];
+					//sign[i]=cr[j+1];
 					cols_vals[i]=cr[j+2];
+					//System.out.println(cols_names[i] + " "+cols_vals[i]);
 				}
+				
 				for(int i = 0 ; i < cols_names.length ; i++) {
 					for(int j = 0 ; j < document.getElementsByTagName(cols_names[i]).getLength() ; j++) {
 						document.getElementsByTagName(cols_names[i]).item(j).setTextContent(cols_vals[i]);
 				
 					}
 				}
-				
+				System.out.println(document.getElementsByTagName(cols_names[0]).item(0).getTextContent());
 			}
 			//*****************if the input contains where **********
 			else {
@@ -735,28 +841,16 @@ import org.xml.sax.SAXException;
 				condition[0]=cr[c];
 				condition[1]=cr[c+1];
 				condition[2]=cr[c+2];
-				
 				for(int i = 0 ; i < cols_names.length ; i++) {
 					for(int j = 0 ; j < document.getElementsByTagName(cols_names[i]).getLength() ; j++) {
 						if(condition_calculator(document.getElementsByTagName(cols_names[i]).item(j).getTextContent(), condition[2] , condition[1].charAt(0))) {
 							document.getElementsByTagName(cols_names[i]).item(j).setTextContent(cols_vals[i]);
-						}
+							}
 					}
 				}
 				
-				if(XML_validator.validate_Xml_Xsd(DBS.get(table_DB.get(table_name)).get(table_name).getAbsolutePath(),DBS.get(table_DB.get(table_name)).get(table_name).getAbsolutePath().replace("xml", "xsd"))) {
-					
-					
-					
-				}
-				else {
 				
-					
-					
-					
-					
-					
-				}
+				
 				TransformerFactory transformerfactory = TransformerFactory.newInstance();
 				Transformer transformer = null;
 				try {
@@ -766,16 +860,44 @@ import org.xml.sax.SAXException;
 					e.printStackTrace();
 				}
 				DOMSource domsource = new DOMSource(document);
-				StreamResult streamresult = new StreamResult(DBS.get(table_DB.get(table_name)).get(table_name));
+				File temp = new File(XMLFilePath+"\\"+ "temp" +".xml");
+				StreamResult streamresult = new StreamResult(temp);
 				
 				
 				try {
 					transformer.transform(domsource,streamresult);
+					System.out.println("You Updated >> "+table_name);
 				} catch (TransformerException e) {
+					System.err.println("Error");
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
+			
+				
+				
+				
+				if(XML_validator.validate_Xml_Xsd(temp.getAbsolutePath(),DBS.get(table_DB.get(table_name)).get(table_name+".xml").getAbsolutePath().replace("xml", "xsd"))) {
+					try {
+						movetofile(temp, DBS.get(table_DB.get(table_name)).get(table_name+".xml"));
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				}
+				else {
+				
+					
+					
+					System.err.println("Error invalid datatype!");
+					
+					
+				}
+				temp.delete();
 				}	
+			
+		
+			
+			
 			}
 		}
 	return 0;

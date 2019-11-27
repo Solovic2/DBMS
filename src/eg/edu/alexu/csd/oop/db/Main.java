@@ -12,7 +12,6 @@ import org.hamcrest.Matcher;
 public class Main {
 
 	public static void main(String[] args) {
-
 		Scanner input=new Scanner(System.in);
 		String s= new String();
 		DB ourinput=DB.get_instance();
@@ -44,6 +43,6 @@ public class Main {
 		}
 		System.out.println("******************************Hope You Enjoyed Our DBMS******************************");
 		
-		
+	
 	}
 }

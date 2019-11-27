@@ -16,7 +16,7 @@ public class SanityTest {
 
 	private File createDatabase(Database db, String name, boolean drop){
 		String path = db.createDatabase("sample" + System.getProperty("file.separator") + name, drop); // create database
-		//System.out.println(path);
+		System.out.println(path);
 		Assert.assertNotNull("Failed to create database", path);
 		File dbDir = new File(path);
 		Assert.assertTrue("Database directory is not found or not a directory", dbDir.exists() && dbDir.isDirectory());

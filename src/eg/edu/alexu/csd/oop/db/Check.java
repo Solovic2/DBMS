@@ -50,8 +50,8 @@ public class Check {
         	re.add(matcher_path.group(5));
         	return re.toArray(new String[re.size()]);
         }
-        
-        System.err.println("ERROPR!! Wrong Syntax");
+        System.out.println("Database directory is not found or not a directory");
+       // System.err.println("ERROPR!! Wrong Syntax");
         return null;
 	}
 	public String[] updatecheck(String s) throws SQLException {
@@ -63,27 +63,7 @@ public class Check {
         java.util.regex.Matcher matcher_updateall = pattern_updateall.matcher(s);
 		Pattern pattern_update = Pattern.compile(update);
         java.util.regex.Matcher matcher_update = pattern_update.matcher(s);
-        if(matcher_updateall.matches()) {
-        	re.add(matcher_updateall.group(3));
-        	String[] coma=matcher_updateall.group(6).split(",");
-            for(int i=0;i<coma.length;i++) {
-            	String temp=coma[i];
-            	String regex="(\\s*)(\\w+)(\\s*)([=><])(\\s*)((?:\\'[\\s\\S]+\\')|\\d+)(\\s*)";
-            	Pattern pattern_regex = Pattern.compile(regex);
-            	java.util.regex.Matcher matcher_regex = pattern_regex.matcher(temp);
-            	matcher_regex.matches();
-            	re.add(matcher_regex.group(2));
-            	re.add(matcher_regex.group(4));
-            	String s13;
-            	if(matcher_regex.group(6).matches("\\d+")) {
-            		s13=""+matcher_regex.group(6);
-            	}else {
-            		s13=matcher_regex.group(6).substring(1, matcher_regex.group(6).length()-1);
-            	}
-            	re.add(s13);
-            }
-            return re.toArray(new String[re.size()]);
-        }else if(matcher_update.matches()) {
+        if(matcher_update.matches()) {
         	re.add(matcher_update.group(3));
         	String[] coma=matcher_update.group(6).split(",");
         	for(int i=0;i<coma.length;i++) {
@@ -113,6 +93,28 @@ public class Check {
         	re.add(s13);
         	return re.toArray(new String[re.size()]);
         }	
+        else if(matcher_updateall.matches()) {
+        	re.add(matcher_updateall.group(3));
+        	String[] coma=matcher_updateall.group(6).split(",");
+            for(int i=0;i<coma.length;i++) {
+            	String temp=coma[i];
+            	String regex="(\\s*)(\\w+)(\\s*)([=><])(\\s*)((?:\\'[\\s\\S]+\\')|\\d+)(\\s*)";
+            	Pattern pattern_regex = Pattern.compile(regex);
+            	java.util.regex.Matcher matcher_regex = pattern_regex.matcher(temp);
+            	matcher_regex.matches();
+            	re.add(matcher_regex.group(2));
+            	re.add(matcher_regex.group(4));
+            	String s13;
+            	if(matcher_regex.group(6).matches("\\d+")) {
+            		s13=""+matcher_regex.group(6);
+            	}else {
+            		s13=matcher_regex.group(6).substring(1, matcher_regex.group(6).length()-1);
+            	}
+            	re.add(s13);
+            }
+            return re.toArray(new String[re.size()]);
+        }
+        
         System.err.println("ERROPR!! Wrong Syntax");
         return null;
 	}
@@ -200,9 +202,11 @@ public class Check {
         Pattern pattern_select_where = Pattern.compile(select_where);
         java.util.regex.Matcher matcher_select_where = pattern_select_where.matcher(s);
         if(matcher_selectall.matches()) {
+        	System.out.println("selsct all");
         	re.add(matcher_selectall.group(7));
         	return re.toArray(new String[re.size()]);
         }else if(matcher_selectall_where.matches()) {
+        	System.out.println("selsct all whith where");
         	/* Table Name */
         	re.add(matcher_selectall_where.group(7));
         	/*Where (name) (=) (value)*/
@@ -219,6 +223,7 @@ public class Check {
         	re.add(s13);
         	return re.toArray(new String[re.size()]);
         }else if(matcher_select.matches()) {
+        	System.out.println("selsct ");
         	re.add(matcher_select.group(7));// table name
             /* Split for colums*/
         	String[] coma=matcher_select.group(3).split(",");
@@ -234,6 +239,7 @@ public class Check {
         	 
         	 return re.toArray(new String[re.size()]);
         }else if (matcher_select_where.matches()) {
+        	System.out.println("selsct whith where");
         	re.add(matcher_select_where.group(7));//table name
             /* Split for colums*/
         	String[] coma=matcher_select_where.group(3).split(",");
@@ -256,8 +262,9 @@ public class Check {
         	}else {
         		/* if the value is String */	
         		s13=matcher_select_where.group(15).substring(1, matcher_select_where.group(15).length()-1);
-        		re.add(s13);
+        		
         	}
+        	re.add(s13);
         	return re.toArray(new String[re.size()]);
         }
         System.err.println("ERROPR!! Wrong Syntax");
