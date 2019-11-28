@@ -1,7 +1,3 @@
-Name: islam
-PATH: D:\DBMS\databases\islam
-Name: lol
-PATH: D:\DBMS\databases\lol
 Name: TestDB
 PATH: D:\DBMS\databases\sample\TestDB
 Name: SaMpLe
