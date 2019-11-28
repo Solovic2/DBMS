@@ -107,7 +107,6 @@ import org.xml.sax.SAXException;
 	}
 	/*******************************condition calculator*******************************************/
 	public boolean condition_calculator (String col_val , String val , char operator) {
-		if(col_val!="") {
 		if(operator == '=') {
 			return col_val.equals(val);
 		}
@@ -118,7 +117,6 @@ import org.xml.sax.SAXException;
 			return Integer.parseInt(col_val) < Integer.parseInt(val);
 		}
 		
-		}
 		return false;
 	}
 	
@@ -712,7 +710,7 @@ import org.xml.sax.SAXException;
 					e.printStackTrace();
 				}
 			
-			
+			System.out.println(DBS.get(table_DB.get(table_name)).get(table_name+".xml").getAbsolutePath());
 				if(XML_validator.validate_Xml_Xsd(temp.getAbsolutePath(),DBS.get(table_DB.get(table_name)).get(table_name+".xml").getAbsolutePath().replace("xml", "xsd"))) {
 					try {
 						updated_rows_count = 1;

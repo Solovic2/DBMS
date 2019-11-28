@@ -275,6 +275,7 @@ public class SmokeTest {
         try {
             db.executeStructureQuery("CREATE TABLE table_name13(column_name1 varchar, column_name2 int, column_name3 varchar)");
             int count1 = db.executeUpdateQuery("INSERT INTO table_name13(column_NAME1, COLUMN_name3, column_name2) VALUES ('value1', 'value3', 4)");
+            System.out.println("rows number "+count1);
             Assert.assertNotEquals("Insert returned zero rows", 0, count1);
             int count2 = db.executeUpdateQuery("INSERT INTO table_name13(column_NAME1, column_name2, COLUMN_name3) VALUES ('value1', 4, 'value3')");
             Assert.assertNotEquals("Insert returned zero rows", 0, count2);

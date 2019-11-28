@@ -4,6 +4,8 @@ Name: testdb_select
 PATH: d:\dbms\databases\sample\testdb_select
 Name: testdb_update
 PATH: d:\dbms\databases\sample\testdb_update
+Name: sample
+PATH: d:\dbms\databases\sample\sample
 Name: testdb_create
 PATH: d:\dbms\databases\sample\testdb_create
 Name: testdb_insert
