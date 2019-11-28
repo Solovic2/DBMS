@@ -1,4 +1,10 @@
-Name: TestDB
-PATH: D:\DBMS\databases\sample\TestDB
-Name: SaMpLe
-PATH: D:\DBMS\databases\sample\SaMpLe
+Name: testdb
+PATH: D:\DBMS\databases\sample\testdb
+Name: testdb_select
+PATH: d:\dbms\databases\sample\testdb_select
+Name: testdb_update
+PATH: d:\dbms\databases\sample\testdb_update
+Name: testdb_create
+PATH: d:\dbms\databases\sample\testdb_create
+Name: testdb_insert
+PATH: d:\dbms\databases\sample\testdb_insert
