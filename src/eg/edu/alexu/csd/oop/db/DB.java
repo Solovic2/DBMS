@@ -107,16 +107,15 @@ import org.xml.sax.SAXException;
 	}
 	/*******************************condition calculator*******************************************/
 	public boolean condition_calculator (String col_val , String val , char operator) {
-		if(operator == '=') {
-			return col_val.equals(val);
+		if(col_val!="") {
+			if (operator == '=') {
+				return col_val.equals(val);
+			} else if (operator == '>') {
+				return Integer.parseInt(col_val) > Integer.parseInt(val);
+			} else if (operator == '<') {
+				return Integer.parseInt(col_val) < Integer.parseInt(val);
+			}
 		}
-		else if(operator == '>') {
-			return Integer.parseInt(col_val) > Integer.parseInt(val);
-		}
-		else if(operator == '<') {
-			return Integer.parseInt(col_val) < Integer.parseInt(val);
-		}
-		
 		return false;
 	}
 	
@@ -525,8 +524,8 @@ import org.xml.sax.SAXException;
 		
 		
 		for(int i = 0 ; i < rows.getLength() ; i++) {
-			if(condition == null || condition_calculator(document.getElementsByTagName(condition[0]).item(i).getTextContent(), condition[2], condition[1].charAt(0))) {
-				Selected_rows.add(i);		
+			if(condition == null || condition_calculator(document.getElementsByTagName(condition[0]).item(i+1).getTextContent(), condition[2], condition[1].charAt(0))) {
+				Selected_rows.add(i+1);
 			}
 		}
 		//Stack<String> cols_names = new Stack<String>(); 
@@ -742,12 +741,12 @@ import org.xml.sax.SAXException;
 					condition[2]=cr[3];
 					NodeList colvals = document.getElementsByTagName(condition[0]);
 					boolean deleted = false;
-
 					for(int i = 0 ; i < colvals.getLength() ; i++) {
-						if(condition == null ||condition_calculator(document.getElementsByTagName(condition[0]).item(i).getTextContent(), condition[2], condition[1].charAt(0))) {
+						if(condition == null || condition_calculator(document.getElementsByTagName(condition[0]).item(i).getTextContent(), condition[2], condition[1].charAt(0))) {
 							deleted = true;
 							updated_rows_count++;
 							document.getFirstChild().removeChild(document.getFirstChild().getChildNodes().item(i));
+							i--;
 						}
 					}
 					TransformerFactory transformerfactory = TransformerFactory.newInstance();
@@ -797,7 +796,7 @@ import org.xml.sax.SAXException;
 							document.getElementsByTagName(cols_names[i]).item(j).setTextContent(cols_vals[i]);
 						}
 					}
-					System.out.println(document.getElementsByTagName(cols_names[0]).item(0).getTextContent());
+					
 				}
 				//*****************if the input contains where **********
 				else {
@@ -862,7 +861,7 @@ import org.xml.sax.SAXException;
 					}	
 				}
 			}
-		System.out.println(updated_rows_count);
+		
 		return updated_rows_count;
 		}
 
