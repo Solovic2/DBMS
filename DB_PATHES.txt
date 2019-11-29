@@ -1,2 +1,0 @@
-Name: second_test
-PATH: D:\DBMS\databases\sample\second_test
