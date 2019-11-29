@@ -43,7 +43,7 @@ public class DB implements Database{
 	private static Map<String, String> table_DB = new HashMap<String, String>();
 	private static Stack<String> database_names = new Stack<String>();
 	/************************move to file**********************************/
-	public File movetofile(File file1 , File file2) throws IOException {
+	private File movetofile(File file1 , File file2) throws IOException {
 		
 	      BufferedReader brx = new BufferedReader(new FileReader(file1));
 	      PrintWriter pwx = new PrintWriter(new FileWriter(file2));
@@ -92,7 +92,7 @@ public class DB implements Database{
 	
 	
 	/*************************************delete files of certain folder****************************/
-	public static boolean deleteDirectory(File dir) { 
+	private static boolean deleteDirectory(File dir) {
 		if (dir.isDirectory()) {
 			File[] children = dir.listFiles();
 			for (int i = 0; i < children.length; i++) { 
@@ -107,7 +107,7 @@ public class DB implements Database{
 		return dir.delete();	
 	}
 	/*******************************condition calculator*******************************************/
-	public boolean condition_calculator (String col_val , String val , char operator) {
+	private	 boolean condition_calculator (String col_val , String val , char operator) {
 		if(col_val!="") {
 			if (operator == '=') {
 				return col_val.equals(val);
@@ -523,20 +523,22 @@ public class DB implements Database{
 		
 		NodeList rows = document.getElementsByTagName("id");
 		
-		
-		for(int i = 0 ; i < rows.getLength() ; i++) {
-			if(condition == null || condition_calculator(document.getElementsByTagName(condition[0]).item(i+1).getTextContent(), condition[2], condition[1].charAt(0))) {
-				Selected_rows.add(i+1);
+		try {
+			for (int i = 0; i < rows.getLength(); i++) {
+				if (condition == null || condition_calculator(document.getElementsByTagName(condition[0]).item(i + 1).getTextContent(), condition[2], condition[1].charAt(0))) {
+					Selected_rows.add(i);
+				}
 			}
 		}
-		//Stack<String> cols_names = new Stack<String>(); 
-		
+		catch(NullPointerException e){
+			System.err.println("invalid selected column");
+		}
 		
 		if(query.contains("*")){
 			for(int i = 0 ; i <  document.getElementsByTagName("table_details").item(0).getChildNodes().getLength() ; i++) {
 				cols_names.push(document.getElementsByTagName("table_details").item(0).getChildNodes().item(i).getNodeName());
 			}
-			Selected = new String[Selected_rows.size()][rows.item(0).getChildNodes().getLength()];
+			Selected = new String[Selected_rows.size()][cols_names.size()];
 			int c = 0;
 			for(int i : Selected_rows) {
 				for(int j = 0 ,k = 0; j < cols_names.size() ; j++){
@@ -549,7 +551,7 @@ public class DB implements Database{
 							Selected[c][j] = "null";
 						}
 					}
-					catch(NullPointerException e) {
+					catch(NullPointerException e) {System.out.println("ssssss");
 						Selected[c][j] = "null";
 					}
 				}c++;
@@ -557,14 +559,21 @@ public class DB implements Database{
 		}
 		
 		else {
-			
-			for(int i = 1 ; i < cr.length ; i++) {
-				cols_names.push(cr[i]);
+
+			if(query.contains("where")) {
+				for (int i = 1; i < cr.length-3 ; i++) {
+					cols_names.push(cr[i]);
+				}
 			}
-			
+			else{
+				for (int i = 1; i < cr.length ; i++) {
+					cols_names.push(cr[i]);
+				}
+			}
+
 			Stack<String> children_of_specified_row = new Stack<String>();
 			
-			
+
 			Selected = new String[Selected_rows.size()][cols_names.size()]; 
 			int c = 0;
 			for(int i : Selected_rows) {
