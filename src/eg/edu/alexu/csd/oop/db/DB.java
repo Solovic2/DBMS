@@ -30,8 +30,12 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
+import sun.rmi.runtime.NewThreadAction;
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> 84215b28d9a694b9cd804eccbe7e78a4cb4d5608
 public class DB implements Database{
 	private final static String XMLFilePath = "D:\\DBMS\\databases\\sample";
 	private  File file =  new File("D:\\DBMS\\DB_PATHES.txt");	
@@ -551,7 +555,7 @@ public class DB implements Database{
 							Selected[c][j] = "null";
 						}
 					}
-					catch(NullPointerException e) {
+					catch(NullPointerException e) {System.out.println("ssssss");
 						Selected[c][j] = "null";
 					}
 				}c++;
