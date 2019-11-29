@@ -1,2 +1,2 @@
-Name: test_database
-PATH: D:\DBMS\databases\test_database
+Name: second_test
+PATH: D:\DBMS\databases\sample\second_test

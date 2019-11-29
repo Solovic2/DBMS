@@ -472,6 +472,7 @@ public class DB implements Database{
 					xsd.delete();
 					DBS.get(table_DB.get(table_name)).remove(table_name+".xml");
 					table_DB.remove(table_name);
+					  System.out.println("Table> "+table_name+" << is Dropped");
 					return true;
 				}
 			}	
@@ -597,11 +598,16 @@ public class DB implements Database{
 			
 		}
 		
-		
-		for(int i = 0 ; i < Selected.length ; i++) {
+		System.out.println("selected values:");
+		System.out.println("==============================================");
+			for(int i = 0 ; i < Selected.length ; i++) {
 			for(int j = 0 ; j < Selected[0].length ; j++) {
-				System.out.print(Selected[i][j]+" ");
-					}System.out.print("\n");
+				
+				System.out.print(Selected[i][j]);
+				 System.out.print("\t");
+					}
+			System.out.print("\n");
+			System.out.println("==============================================");
 		}
 		
 		
