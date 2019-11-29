@@ -31,7 +31,8 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
-	public class DB implements Database{
+
+public class DB implements Database{
 	private final static String XMLFilePath = "D:\\DBMS\\databases\\sample";
 	private  File file =  new File("D:\\DBMS\\DB_PATHES.txt");	
 	private Check ch = Check.get_instance();
@@ -42,7 +43,7 @@ import org.xml.sax.SAXException;
 	private static Map<String, String> table_DB = new HashMap<String, String>();
 	private static Stack<String> database_names = new Stack<String>();
 	/************************move to file**********************************/
-	public File movetofile(File file1 , File file2) throws IOException {
+	private File movetofile(File file1 , File file2) throws IOException {
 		
 	      BufferedReader brx = new BufferedReader(new FileReader(file1));
 	      PrintWriter pwx = new PrintWriter(new FileWriter(file2));
@@ -91,7 +92,7 @@ import org.xml.sax.SAXException;
 	
 	
 	/*************************************delete files of certain folder****************************/
-	public static boolean deleteDirectory(File dir) { 
+	private static boolean deleteDirectory(File dir) {
 		if (dir.isDirectory()) {
 			File[] children = dir.listFiles();
 			for (int i = 0; i < children.length; i++) { 
@@ -106,7 +107,7 @@ import org.xml.sax.SAXException;
 		return dir.delete();	
 	}
 	/*******************************condition calculator*******************************************/
-	public boolean condition_calculator (String col_val , String val , char operator) {
+	private	 boolean condition_calculator (String col_val , String val , char operator) {
 		if(col_val!="") {
 			if (operator == '=') {
 				return col_val.equals(val);
@@ -522,20 +523,22 @@ import org.xml.sax.SAXException;
 		
 		NodeList rows = document.getElementsByTagName("id");
 		
-		
-		for(int i = 0 ; i < rows.getLength() ; i++) {
-			if(condition == null || condition_calculator(document.getElementsByTagName(condition[0]).item(i+1).getTextContent(), condition[2], condition[1].charAt(0))) {
-				Selected_rows.add(i+1);
+		try {
+			for (int i = 0; i < rows.getLength(); i++) {
+				if (condition == null || condition_calculator(document.getElementsByTagName(condition[0]).item(i + 1).getTextContent(), condition[2], condition[1].charAt(0))) {
+					Selected_rows.add(i);
+				}
 			}
 		}
-		//Stack<String> cols_names = new Stack<String>(); 
-		
+		catch(NullPointerException e){
+			System.err.println("invalid selected column");
+		}
 		
 		if(query.contains("*")){
 			for(int i = 0 ; i <  document.getElementsByTagName("table_details").item(0).getChildNodes().getLength() ; i++) {
 				cols_names.push(document.getElementsByTagName("table_details").item(0).getChildNodes().item(i).getNodeName());
 			}
-			Selected = new String[Selected_rows.size()][rows.item(0).getChildNodes().getLength()];
+			Selected = new String[Selected_rows.size()][cols_names.size()];
 			int c = 0;
 			for(int i : Selected_rows) {
 				for(int j = 0 ,k = 0; j < cols_names.size() ; j++){
@@ -556,14 +559,21 @@ import org.xml.sax.SAXException;
 		}
 		
 		else {
-			
-			for(int i = 1 ; i < cr.length ; i++) {
-				cols_names.push(cr[i]);
+
+			if(query.contains("where")) {
+				for (int i = 1; i < cr.length-3 ; i++) {
+					cols_names.push(cr[i]);
+				}
 			}
-			
+			else{
+				for (int i = 1; i < cr.length ; i++) {
+					cols_names.push(cr[i]);
+				}
+			}
+
 			Stack<String> children_of_specified_row = new Stack<String>();
 			
-			
+
 			Selected = new String[Selected_rows.size()][cols_names.size()]; 
 			int c = 0;
 			for(int i : Selected_rows) {
@@ -650,44 +660,63 @@ import org.xml.sax.SAXException;
 			if (order.equals("insert")) {
 				Stack<String> cols_names = new Stack<String>();
 				Stack<String> cols_vals = new Stack<String>();
-				int k = 1;
-				for(int i = 0 ; i < (cr.length-1)/2 ; i++) {
-					cols_names.push(cr[k]);
-					cols_vals.push(cr[k+1]);
-					k += 2;
+				if(cr[1].equals("1")) {
+					int k = 2;
+					for(int i = 0 ; i < (cr.length-1)/2 ; i++) {
+						cols_names.push(cr[k]);
+						cols_vals.push(cr[k+1]);
+						k += 2;
+					}
+				}else if(cr[1].equals("2")) {
+					int k = 2;
+					for(int i = 0 ; i < (cr.length-2) ; i++) {
+						cols_vals.push(cr[k]);
+						k ++;
+					}
+					cols_names=null;
 				}
-								
+
+
+
 				Element root = document.getDocumentElement();
 				
 				Element NEW = document.createElement("id");
 				root.appendChild(NEW);
-				Document schema =null;
-				try {
-					schema = documentbuilder.parse(new File(DBS.get(table_DB.get(table_name)).get(table_name+".xml").getAbsolutePath().replace("xml", "xsd")));
-				} catch (SAXException | IOException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				}
 
 				Stack<Integer> ordered_cols_names = new Stack<Integer>();
 				Stack<String> All_cols_names = new Stack<String>();
 				for(int i = 0 ; i < document.getElementsByTagName("table_details").item(0).getChildNodes().getLength() ; i++){
 					All_cols_names.push(document.getElementsByTagName("table_details").item(0).getChildNodes().item(i).getNodeName());
 				}
-
-				for(int i = 0 ; i < cols_names.size() ; i++){
-					ordered_cols_names.push(All_cols_names.indexOf(cols_names.elementAt(i)));
-					//System.out.println(ordered_cols_names.elementAt(i));
+				if(cols_names == null){
+					if(cols_vals.size() == All_cols_names.size()){
+						for(int i = 0 ; i < All_cols_names.size() ; i++){
+							Element temp = document.createElement(All_cols_names.elementAt(i));
+							NEW.appendChild(temp);
+							temp.setTextContent(cols_vals.elementAt(i));
+						}
+					}
+					else{
+						return 0;
+					}
 				}
-				ordered_cols_names.sort(Integer::compareTo);
+
+				else {
 
 
-				for(int i = 0; i < cols_names.size() ; i++) {
-					Element temp = document.createElement(All_cols_names.elementAt(ordered_cols_names.elementAt(i)));
-					NEW.appendChild(temp);
-					temp.setTextContent(cols_vals.elementAt(cols_names.indexOf(All_cols_names.elementAt(ordered_cols_names.elementAt(i)))));
+					for (int i = 0; i < cols_names.size(); i++) {
+						ordered_cols_names.push(All_cols_names.indexOf(cols_names.elementAt(i)));
+						//System.out.println(ordered_cols_names.elementAt(i));
+					}
+					ordered_cols_names.sort(Integer::compareTo);
+
+
+					for (int i = 0; i < cols_names.size(); i++) {
+						Element temp = document.createElement(All_cols_names.elementAt(ordered_cols_names.elementAt(i)));
+						NEW.appendChild(temp);
+						temp.setTextContent(cols_vals.elementAt(cols_names.indexOf(All_cols_names.elementAt(ordered_cols_names.elementAt(i)))));
+					}
 				}
-					
 				TransformerFactory transformerfactory = TransformerFactory.newInstance();
 				Transformer transformer = null;
 				try {
@@ -709,7 +738,7 @@ import org.xml.sax.SAXException;
 					e.printStackTrace();
 				}
 			
-			System.out.println(DBS.get(table_DB.get(table_name)).get(table_name+".xml").getAbsolutePath());
+			
 				if(XML_validator.validate_Xml_Xsd(temp.getAbsolutePath(),DBS.get(table_DB.get(table_name)).get(table_name+".xml").getAbsolutePath().replace("xml", "xsd"))) {
 					try {
 						updated_rows_count = 1;
@@ -725,8 +754,6 @@ import org.xml.sax.SAXException;
 				}
 
 				temp.delete();
-				
-
 			}
 			
 			
@@ -796,7 +823,7 @@ import org.xml.sax.SAXException;
 							document.getElementsByTagName(cols_names[i]).item(j).setTextContent(cols_vals[i]);
 						}
 					}
-					
+
 				}
 				//*****************if the input contains where **********
 				else {
@@ -861,7 +888,7 @@ import org.xml.sax.SAXException;
 					}	
 				}
 			}
-		
+
 		return updated_rows_count;
 		}
 

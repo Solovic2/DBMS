@@ -1,0 +1,1 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><test_table><table_details><col1 type="integer"/><col2 type="string"/><col3 type="integer"/><col4 type="string"/></table_details><id><col1>100</col1></id><id><col2>try</col2><col4>tryagian</col4></id><id><col3>500</col3></id></test_table>

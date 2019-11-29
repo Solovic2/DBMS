@@ -122,10 +122,14 @@ public class Check {
 		ArrayList<String> re=new ArrayList<String>(); 
 		re.clear();
 		String insert_int = "(insert)(\\s+)(into)(\\s+)(\\w+)(\\s*+)(\\()(\\s*+)([\\w]+\\s*(?:,\\s*[\\w]+\\s*){0,})(\\s*+)(\\))(\\s*)(values)(\\s*)(\\()((?:(?:\\s*\\'\\s*[\\s\\S]+\\s*\\'\\s*)|(?:\\s*[\\d]+\\s*))(?:,(?:(?:\\s*\\'\\s*[\\s\\S]+\\s*\\'\\s*)|(?:\\s*[\\d]+\\s*))){0,})(\\))(\\s*+)";
+		String insert2="(insert)(\\s+)(into)(\\s+)(\\w+)(\\s*+)(values)(\\s*)(\\()((?:(?:\\s*\\'\\s*[\\s\\S]+\\s*\\'\\s*)|(?:\\s*[\\d]+\\s*))(?:,(?:(?:\\s*\\'\\s*[\\s\\S]+\\s*\\'\\s*)|(?:\\s*[\\d]+\\s*))){0,})(\\))(\\s*+)";
 		Pattern pattern_insertInt = Pattern.compile(insert_int);
 	        java.util.regex.Matcher matcher_insertInt = pattern_insertInt.matcher(s);
+	        Pattern pattern_insert2 = Pattern.compile(insert2);
+	        java.util.regex.Matcher matcher_insert2 = pattern_insert2.matcher(s);
 	        if(matcher_insertInt.matches()) {
 	        	re.add(matcher_insertInt.group(5));
+	        	re.add("1");
 	        	String[] coma = matcher_insertInt.group(9).split(",");
 	        	String[] coma2 = matcher_insertInt.group(16).split(",");
 	        	if(coma.length != coma2.length)return null;
@@ -149,6 +153,25 @@ public class Check {
 	            	}
 	            	re.add(s13);
 	            }
+	        	return re.toArray(new String[re.size()]);
+	        }else if(matcher_insert2.matches()) {
+	        	re.add(matcher_insert2.group(5));
+	        	re.add("2");
+	        	String[] coma=matcher_insert2.group(10).split(",");
+	        	for(int i=0;i<coma.length;i++) {
+	        		String temp=coma[i];
+	            	String regex="(\\s*)((?:\\'[\\s\\S]+\\')|\\d+)(\\s*)";
+	            	Pattern pattern_regex = Pattern.compile(regex);
+	            	java.util.regex.Matcher matcher_regex = pattern_regex.matcher(temp);
+	            	matcher_regex.matches();
+	            	String s13;
+	            	if(matcher_regex.group(2).matches("\\d+")) {
+	            		s13=""+matcher_regex.group(2);
+	            	}else {
+	            		s13=matcher_regex.group(2).substring(1, matcher_regex.group(2).length()-1);
+	            	}
+	            	re.add(s13);
+	        	}
 	        	return re.toArray(new String[re.size()]);
 	        }
 	        System.err.println("syntax error");

@@ -13,7 +13,7 @@ import java.util.Map;
 
 public class Reload_DATA {
 	
-	private final static String XMLFilePath = "D:\\DBMS\\databases\\sample";
+	private final static String XMLFilePath = "D:\\DBMS\\databases";
 	private DB DB_instance = DB.get_instance();
 	
 	public void reload() throws FileNotFoundException, IOException {
