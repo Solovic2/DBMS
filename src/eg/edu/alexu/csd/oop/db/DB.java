@@ -167,7 +167,7 @@ public class DB implements Database{
 				//create folder in case of path given
 				if(DBname.contains(System.getProperty("file.separator"))) {
 					File newFolder = new File(DBname);
-			        if(newFolder.mkdir()) {
+			        if(newFolder.mkdirs()) {
 			        	path = DBname;
 			        	save = true;
 			        	DBname = DBname.substring(DBname.lastIndexOf("\\")+1);
@@ -176,7 +176,7 @@ public class DB implements Database{
 				//create folder in case of name given
 				else {
 					File newFolder = new File(XMLFilePath+"\\"+DBname);
-			        if(newFolder.mkdir()) {
+			        if(newFolder.mkdirs()) {
 			        	save = true;   
 			        }
 				}
